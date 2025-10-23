@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Runs on a standard GitHub Linux server
+    runs-on: self-hosted # Runs on a standard GitHub Linux server
 
     steps:
       - name: Checkout Repository
