@@ -15,8 +15,11 @@ RUN apt-get update && apt-get install -y git && \
 # Stage 3: Assemble the final image using guestfish
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
-# Install guestfish and its required kernel dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends libguestfs-tools linux-image-generic
+# Install guestfish and its dependencies, then immediately clean up
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libguestfs-tools linux-image-generic && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create the output directory
 RUN mkdir -p /output
