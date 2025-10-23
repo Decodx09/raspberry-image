@@ -1,0 +1,11 @@
+[Unit]
+Description=First Boot API Check-in
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/first-boot.sh
+
+[Install]
+WantedBy=multi-user.target

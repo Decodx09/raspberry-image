@@ -1,0 +1,15 @@
+[Unit]
+Description=Main Python Application
+# Start after the network and QR reader are ready
+After=network-online.target automon-qr.service
+
+[Service]
+User=appuser
+WorkingDirectory=/opt/app/current
+# Make sure your Python app's entrypoint is named main.py
+ExecStart=/usr/bin/python3 /opt/app/current/main.py
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
