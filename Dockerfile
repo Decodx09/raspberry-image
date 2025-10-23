@@ -65,4 +65,8 @@ RUN mkdir -p /output
 RUN git clone --depth=1 https://github.com/raspberrypi/firmware.git /rpi-firmware
 COPY --from=rootfs_builder / /rootfs/
 COPY scripts/create-image.sh /usr/local/bin/create-image.sh
+
+# This is the one missing line to fix the "permission denied" error
+RUN chmod +x /usr/local/bin/create-image.sh
+
 CMD ["/usr/local/bin/create-image.sh"]
