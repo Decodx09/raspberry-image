@@ -3,7 +3,8 @@ set -e
 
 # --- Configuration ---
 # Source directory of your Python app code
-APP_SOURCE_DIR="$HOME/something"
+# Use $SUDO_USER to get the home dir of the user who ran sudo, not root
+APP_SOURCE_DIR="/home/$SUDO_USER/something"
 # Production directory (active deployment)
 APP_DEST_DIR="/opt/app/blue"
 # Main app file to rename
