@@ -24,8 +24,7 @@ sudo ln -sfn /opt/app/blue /opt/app/current
 # Remove existing code directory if present, then clone fresh
 sudo rm -rf /opt/app/blue
 # Clone the simple Flask app, forcing non-interactive
-sudo GIT_TERMINAL_PROMPT=0 git clone https://github.com/hiteshkr/Hello-World-Flask.git /opt/app/blue # <-- Simple Flask App
-# Ensure .env file exists and has correct initial permissions
+sudo GIT_TERMINAL_PROMPT=0 git clone https://github.com/hiteshkr/Hello-World-Flask.git /opt/app/blue && \
 sudo touch /opt/app/blue/.env
 sudo chown -R appuser:appuser /opt/app
 
