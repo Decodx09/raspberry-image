@@ -19,11 +19,11 @@ done
 
 # --- 3. Get the HMAC (If implemented by your backend) ---
 logger -t "first-boot" "Generating HMAC..."
-HMAC_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
+HMAC_RESPONSE=$(curl -X POST -H "Content-Type: application/json" \-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93ZWR3ZGdmZWVhemxxdW1maWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NTE0NTIsImV4cCI6MjA2NjQyNzQ1Mn0.5jiovJMouMH-awzOPTG-Ilsly588bg0jHQ7TeQUaVk0"\
   -d "{\"name\": \"$RPI_NAME\"}" \
   "$API_ROOT/raspberry-generate-hmac")
 
-HMAC_VALUE=$(echo "$HMAC_RESPONSE" | jq -r '.hmac')
+HMAC_VALUE=$(echo "$HMAC_RESPONSE" | jq -r '.data.hmac')
 
 if [[ -z "$HMAC_VALUE" || "$HMAC_VALUE" == "null" ]]; then
     logger -t "first-boot" "Failed to retrieve valid HMAC. Exiting."
@@ -32,11 +32,9 @@ fi
 
 # --- 4. Call the API to get the key ---
 logger -t "first-boot" "Calling API to retrieve RASPBERRY_API_KEY..."
-API_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"name\": \"$RPI_NAME\", \"hmac\": \"$HMAC_VALUE\"}" \
-  "$API_ROOT/raspberry-apiKey")
+API_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93ZWR3ZGdmZWVhemxxdW1maWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NTE0NTIsImV4cCI6MjA2NjQyNzQ1Mn0.5jiovJMouMH-awzOPTG-Ilsly588bg0jHQ7TeQUaVk0" \-d "{\"name\": \"$RPI_NAME\", \"hmac\": \"$HMAC_VALUE\"}" "$API_ROOT/raspberry-apiKey")
 
-API_KEY=$(echo "$API_RESPONSE" | jq -r '.apiKey')
+API_KEY=$(echo "$API_RESPONSE" | jq -r '.data.apiKey')
 
 # --- 5. Save key, flag, and disable service ---
 if [[ ! -z "$API_KEY" && "$API_KEY" != "null" ]]; then
