@@ -1,12 +1,12 @@
 [Unit]
 Description=Main Python Application
-After=network-online.target automon-qr.service
+After=network-online.target automon-qr.service first-boot.service
 
 [Service]
-User=appuser
+# User will be set by setup.sh to the user who ran the script
+User=appuser 
 WorkingDirectory=/opt/app/current
-# Points to the Flask app's main file
-ExecStart=/usr/bin/python3 /opt/app/current/app.py
+ExecStart=/opt/app/current/venv/bin/python3 /opt/app/current/app.py
 Restart=always
 RestartSec=10s
 

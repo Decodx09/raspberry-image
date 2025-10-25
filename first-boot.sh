@@ -3,29 +3,59 @@ set -e
 
 FLAG_FILE="/etc/provisioned"
 ENV_FILE="/opt/app/current/.env"
+API_ROOT="https://owedwdgfeeazlqumfikx.supabase.co/functions/v1"
+RPI_NAME="Raspberry-Pi-01" # MUST be unique per device
 
-# If this script has already run, do nothing.
+# --- 1. Check if already run ---
 if [ -f "$FLAG_FILE" ]; then
     exit 0
 fi
 
-# Wait until the internet connection is up
+# --- 2. Wait for network ---
+logger -t "first-boot" "Waiting for network connectivity..."
 while ! ping -c 1 -W 1 8.8.8.8; do
     sleep 5
 done
 
-# Call the API to get the key
-# NOTE: Name and HMAC are placeholders here. These would be passed into the
-# build pipeline as variables in a real production setup.
+# --- 3. Get the HMAC (If implemented by your backend) ---
+logger -t "first-boot" "Generating HMAC..."
+HMAC_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"name\": \"$RPI_NAME\"}" \
+  "$API_ROOT/raspberry-generate-hmac")
+
+HMAC_VALUE=$(echo "$HMAC_RESPONSE" | jq -r '.hmac')
+
+if [[ -z "$HMAC_VALUE" || "$HMAC_VALUE" == "null" ]]; then
+    logger -t "first-boot" "Failed to retrieve valid HMAC. Exiting."
+    exit 1
+fi
+
+# --- 4. Call the API to get the key ---
+logger -t "first-boot" "Calling API to retrieve RASPBERRY_API_KEY..."
 API_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
-  -d '{"name": "Raspberry-Pi-01", "hmac": "BdahEbCiBiXNnNK8gRKg1BhuXmU+fSiqh3L/INQmcE0="}' \
-  "https://owedwdgfeeazlqumfikx.supabase.co/functions/v1/raspberry-apiKey")
+  -d "{\"name\": \"$RPI_NAME\", \"hmac\": \"$HMAC_VALUE\"}" \
+  "$API_ROOT/raspberry-apiKey")
 
 API_KEY=$(echo "$API_RESPONSE" | jq -r '.apiKey')
 
-# If we got a key, save it, create the flag file, and disable this service
+# --- 5. Save key, flag, and disable service ---
 if [[ ! -z "$API_KEY" && "$API_KEY" != "null" ]]; then
-    echo "RASPBERRY_API_KEY=$API_KEY" >> "$ENV_FILE"
+    logger -t "first-boot" "API Key retrieved. Saving to .env and disabling service."
+    
+    # Use sed to replace the key if it exists, otherwise append
+    if grep -q "RASPBERRY_API_KEY=" "$ENV_FILE"; then
+        sed -i "/^RASPBERRY_API_KEY=/c\RASPBERRY_API_KEY=$API_KEY" "$ENV_FILE"
+    else
+        echo "RASPBERRY_API_KEY=$API_KEY" >> "$ENV_FILE"
+    fi
+
+    # Ensure the correct user owns the updated file
+    TARGET_USER=$(stat -c "%U" /opt/app/current)
+    chown "$TARGET_USER:$TARGET_USER" "$ENV_FILE"
+
     touch "$FLAG_FILE"
     systemctl disable first-boot.service
+    logger -t "first-boot" "Provisioning complete and service disabled."
+else
+    logger -t "first-boot" "Failed to retrieve valid API Key. Check API response."
 fi
