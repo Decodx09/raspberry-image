@@ -3,8 +3,8 @@ set -e
 
 # --- Configuration ---
 # Source directory of your Python app code
-# Use $SUDO_USER to get the home dir of the user who ran sudo, not root
-APP_SOURCE_DIR="/home/$SUDO_USER/something"
+# HARDCODED FIX: Use the correct user 'paka' instead of $SUDO_USER
+APP_SOURCE_DIR="/home/paka/something"
 # Production directory (active deployment)
 APP_DEST_DIR="/opt/app/blue"
 # Main app file to rename
@@ -39,8 +39,11 @@ sudo $VENV_PIP install -r "$APP_DEST_DIR/requirements.txt"
 echo "Configuring app.py for production (using /dev/input/qr)..."
 # This command replaces the development port with the correct QR reader path
 sudo sed -i "s|os.getenv('DEV_UART_PORT_APP', '/dev/pts/3')|os.getenv('UART_PORT', '/dev/input/qr')|" "$APP_DEST_DIR/app.py"
-# This command removes the simulator port line
+
+# This command removes the simulator port DEFINITION line
 sudo sed -i "/DEV_UART_PORT_SIMULATOR/d" "$APP_DEST_DIR/app.py"
+# THIS IS THE FIX: Remove the line that tries to print the simulator port
+sudo sed -i "/Hardware simulator should use/d" "$APP_DEST_DIR/app.py"
 
 
 # --- 5. Set Final Ownership ---
@@ -53,3 +56,4 @@ sudo systemctl start myapp.service
 
 echo "--- Deployment Complete ---"
 echo "Check status with: sudo systemctl status myapp.service"
+
